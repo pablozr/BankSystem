@@ -50,3 +50,6 @@ application-*.properties
 .DS_Store
 Thumbs.db
 ehcache-diskstore/
+
+
+src/main/resources/application.properties
