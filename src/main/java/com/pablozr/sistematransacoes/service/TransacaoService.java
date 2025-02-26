@@ -7,6 +7,7 @@ import com.pablozr.sistematransacoes.exception.ValorNegativoException;
 import com.pablozr.sistematransacoes.model.Transacao;
 import com.pablozr.sistematransacoes.model.Usuario;
 import com.pablozr.sistematransacoes.repository.TransacaoRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,7 +47,7 @@ public class TransacaoService {
 
         return transacaoRepository.save(transacao);
     }
-
+    @Transactional(rollbackOn = Exception.class)
     public Transacao tranferencia(Usuario remetente, Usuario destinatario, BigDecimal valor){
         if (valor.compareTo(BigDecimal.ZERO) <= 0){
             throw new ValorNegativoException("O valor da transferência deve ser positivo");

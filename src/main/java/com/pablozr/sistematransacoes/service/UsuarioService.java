@@ -1,11 +1,14 @@
 package com.pablozr.sistematransacoes.service;
 
+import com.pablozr.sistematransacoes.controller.dto.LoginDTOIn;
+import com.pablozr.sistematransacoes.controller.dto.LoginDTOOut;
 import com.pablozr.sistematransacoes.enums.OperacaoSaldo;
 import com.pablozr.sistematransacoes.exception.EmailJaRegistradoException;
 import com.pablozr.sistematransacoes.exception.SenhaFracaException;
 import com.pablozr.sistematransacoes.exception.UsuarioNaoEncontradoException;
 import com.pablozr.sistematransacoes.model.Usuario;
 import com.pablozr.sistematransacoes.repository.UsuarioRepository;
+import com.pablozr.sistematransacoes.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,11 +20,13 @@ import java.util.Optional;
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder){
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider){
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     public Usuario salvarUsuario(Usuario usuario){
@@ -36,6 +41,16 @@ public class UsuarioService {
 
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
         return usuarioRepository.save(usuario);
+    }
+
+    public LoginDTOOut login(LoginDTOIn loginDTO) {
+        Usuario usuario = usuarioRepository.findByEmail(loginDTO.getEmail())
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Credenciais inválidas"));
+        if (!passwordEncoder.matches(loginDTO.getSenha(), usuario.getSenha())) {
+            throw new UsuarioNaoEncontradoException("Credenciais inválidas");
+        }
+        String token = jwtTokenProvider.generateToken(usuario.getEmail(), usuario.getId());
+        return new LoginDTOOut(token, usuario.getId(), usuario.getNome());
     }
 
     public Usuario atualizarUsuario (Long id, Usuario usuarioAtualizado){

@@ -28,4 +28,6 @@ public class Usuario {
     @Column(nullable = false)
     private BigDecimal saldo = BigDecimal.ZERO;
 
+    @Version
+    private Long version;
 }

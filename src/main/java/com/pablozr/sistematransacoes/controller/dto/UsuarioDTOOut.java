@@ -4,9 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.math.BigDecimal;
+
 @AllArgsConstructor
 @Getter
-public class UsuarioDTO {
+public class UsuarioDTOOut {
     private Long id;
     private String nome;
     private String email;

@@ -1,12 +1,12 @@
 package com.pablozr.sistematransacoes.controller;
 
-import com.pablozr.sistematransacoes.controller.dto.UsuarioDTO;
-import com.pablozr.sistematransacoes.exception.UsuarioNaoEncontradoException;
+import com.pablozr.sistematransacoes.controller.dto.UsuarioDTOIn;
+import com.pablozr.sistematransacoes.controller.dto.UsuarioDTOOut;
 import com.pablozr.sistematransacoes.model.Usuario;
 import com.pablozr.sistematransacoes.service.UsuarioService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -23,13 +23,18 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<UsuarioDTO> criarUsuario(@RequestBody Usuario usuario){
-        return ResponseEntity.created(URI.create("/usuarios/" + usuarioService.salvarUsuario(usuario).getId()))
-                .body(converterParaDTO(usuario));
+    public ResponseEntity<UsuarioDTOOut> criarUsuario(@Valid @RequestBody UsuarioDTOIn usuarioDTO) {
+        Usuario usuario = new Usuario();
+        usuario.setNome(usuarioDTO.getNome());
+        usuario.setEmail(usuarioDTO.getEmail());
+        usuario.setSenha(usuarioDTO.getSenha());
+        Usuario usuarioSalvo = usuarioService.salvarUsuario(usuario);
+        return ResponseEntity.created(URI.create("/usuarios/" + usuarioSalvo.getId()))
+                .body(converterParaDTO(usuarioSalvo));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioDTO> buscarUsuario(@PathVariable Long id){
+    public ResponseEntity<UsuarioDTOOut> buscarUsuario(@PathVariable Long id) {
         return usuarioService.buscarPorId(id)
                 .map(this::converterParaDTO)
                 .map(ResponseEntity::ok)
@@ -37,7 +42,10 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioDTO> atualizarUsuario(@PathVariable Long id,@RequestBody Usuario usuarioAtualizado){
+    public ResponseEntity<UsuarioDTOOut> atualizarUsuario(@PathVariable Long id,@Valid @RequestBody UsuarioDTOIn usuarioDTO) {
+        Usuario usuarioAtualizado = new Usuario();
+        usuarioAtualizado.setNome(usuarioDTO.getNome());
+        usuarioAtualizado.setEmail(usuarioDTO.getEmail());
         return ResponseEntity.ok(converterParaDTO(usuarioService.atualizarUsuario(id, usuarioAtualizado)));
     }
 
@@ -47,8 +55,8 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
-    private UsuarioDTO converterParaDTO(Usuario usuario) {
-        return new UsuarioDTO(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getSaldo());
+    private UsuarioDTOOut converterParaDTO(Usuario usuario) {
+        return new UsuarioDTOOut(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getSaldo());
     }
 
 }
