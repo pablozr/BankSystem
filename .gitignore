@@ -1,0 +1,52 @@
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VS Code
+.vscode/
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle (caso o projeto tenha vestígios)
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Logs
+logs/
+*.log
+**/logs/
+
+# Spring Boot
+*.war
+*.jar
+*.ear
+
+# Configuração local
+application-*.yml
+application-*.properties
+.env
+
+# Banco de dados (H2, PostgreSQL, MySQL, etc.)
+*.db
+*.mv.db
+*.h2.db
+*.ldb
+*.sqlite
+
+# Arquivos temporários do sistema
+.DS_Store
+Thumbs.db
+ehcache-diskstore/
