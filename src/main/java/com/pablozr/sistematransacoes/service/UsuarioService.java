@@ -10,11 +10,13 @@ import com.pablozr.sistematransacoes.model.Usuario;
 import com.pablozr.sistematransacoes.repository.UsuarioRepository;
 import com.pablozr.sistematransacoes.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UsuarioService {
@@ -40,6 +42,7 @@ public class UsuarioService {
 
 
         usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
+        usuario.setRoles(Set.of("ROLE_USER"));
         return usuarioRepository.save(usuario);
     }
 
@@ -49,7 +52,7 @@ public class UsuarioService {
         if (!passwordEncoder.matches(loginDTO.getSenha(), usuario.getSenha())) {
             throw new UsuarioNaoEncontradoException("Credenciais inválidas");
         }
-        String token = jwtTokenProvider.generateToken(usuario.getEmail(), usuario.getId());
+        String token = jwtTokenProvider.generateToken(usuario.getEmail(), usuario.getId(), usuario.getRoles());
         return new LoginDTOOut(token, usuario.getId(), usuario.getNome());
     }
 

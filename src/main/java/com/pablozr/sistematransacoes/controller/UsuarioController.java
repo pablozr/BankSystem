@@ -7,6 +7,7 @@ import com.pablozr.sistematransacoes.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -33,6 +34,7 @@ public class UsuarioController {
                 .body(converterParaDTO(usuarioSalvo));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioDTOOut> buscarUsuario(@PathVariable Long id) {
         return usuarioService.buscarPorId(id)
@@ -42,6 +44,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<UsuarioDTOOut> atualizarUsuario(@PathVariable Long id,@Valid @RequestBody UsuarioDTOIn usuarioDTO) {
         Usuario usuarioAtualizado = new Usuario();
         usuarioAtualizado.setNome(usuarioDTO.getNome());
@@ -50,6 +53,7 @@ public class UsuarioController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletarUsuario(@PathVariable Long id){
         usuarioService.deletarUsuario(id);
         return ResponseEntity.noContent().build();
