@@ -3,6 +3,7 @@ package com.pablozr.sistematransacoes.model;
 import com.pablozr.sistematransacoes.enums.TipoTransacao;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 
 import java.math.BigDecimal;
@@ -19,6 +20,7 @@ public class Transacao {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @NonNull
     private TipoTransacao tipo;
 
     @Column(nullable = false, precision = 10, scale = 2)

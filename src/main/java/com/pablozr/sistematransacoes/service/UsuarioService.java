@@ -10,11 +10,15 @@ import com.pablozr.sistematransacoes.model.Usuario;
 import com.pablozr.sistematransacoes.repository.UsuarioRepository;
 import com.pablozr.sistematransacoes.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -57,14 +61,21 @@ public class UsuarioService {
     }
 
     public Usuario atualizarUsuario (Long id, Usuario usuarioAtualizado){
-        Usuario usuarioExistente = usuarioRepository.findById(id)
-                .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário não encontrado"));
-
-        usuarioExistente.setNome(usuarioAtualizado.getNome());
-        usuarioExistente.setEmail(usuarioAtualizado.getEmail());
-        // Can´t update password here, because it needs to be hashed
-
-        return usuarioRepository.save(usuarioExistente);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String emailUsuarioLogado = auth.getName();
+        Usuario usuarioLogado = usuarioRepository.findByEmail(emailUsuarioLogado)
+                .orElseThrow(() -> new UsuarioNaoEncontradoException("Usuário autenticado não encontrado"));
+        if (!usuarioLogado.getId().equals(id)) {
+            throw new AccessDeniedException("Você só pode atualizar seu próprio usuário");
+        }
+        if (usuarioAtualizado.getNome() != null && !usuarioAtualizado.getNome().isBlank()) {
+            usuarioLogado.setNome(usuarioAtualizado.getNome());
+        }
+        if (usuarioAtualizado.getEmail() != null && !usuarioAtualizado.getEmail().isBlank() &&
+                !usuarioAtualizado.getEmail().equals(usuarioLogado.getEmail())) {
+            throw new IllegalArgumentException("O email não pode ser alterado por este endpoint");
+        }
+        return usuarioRepository.save(usuarioLogado);
     }
 
     public void deletarUsuario (Long id){
@@ -96,5 +107,9 @@ public class UsuarioService {
 
     public Optional<Usuario> buscarPorId(Long id){
         return usuarioRepository.findById(id);
+    }
+
+    public List<Usuario> buscarTodos(){
+        return usuarioRepository.findAll();
     }
 }
