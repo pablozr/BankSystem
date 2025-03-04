@@ -2,6 +2,7 @@ package com.pablozr.sistematransacoes.model;
 
 import com.pablozr.sistematransacoes.enums.TipoTransacao;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -20,7 +21,7 @@ public class Transacao {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @NonNull
+    @NotNull
     private TipoTransacao tipo;
 
     @Column(nullable = false, precision = 10, scale = 2)

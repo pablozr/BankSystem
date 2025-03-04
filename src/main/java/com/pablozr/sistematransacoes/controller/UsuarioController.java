@@ -17,7 +17,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/usuarios")
+@RequestMapping("/api/usuarios")
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
@@ -25,23 +25,6 @@ public class UsuarioController {
     @Autowired
     public UsuarioController(UsuarioService usuarioService){
         this.usuarioService = usuarioService;
-    }
-
-    @PostMapping
-    @Operation(summary = "Cria um novo usuário", description = "Permite o cadastro de um novo usuário sem necessidade de autenticação")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos ou email já registrado"),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
-    })
-    public ResponseEntity<UsuarioDTOOut> criarUsuario(@Valid @RequestBody UsuarioDTOIn usuarioDTO) {
-        Usuario usuario = new Usuario();
-        usuario.setNome(usuarioDTO.getNome());
-        usuario.setEmail(usuarioDTO.getEmail());
-        usuario.setSenha(usuarioDTO.getSenha());
-        Usuario usuarioSalvo = usuarioService.salvarUsuario(usuario);
-        return ResponseEntity.created(URI.create("/usuarios/" + usuarioSalvo.getId()))
-                .body(converterParaDTO(usuarioSalvo));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -70,24 +53,6 @@ public class UsuarioController {
     })
     public ResponseEntity<List<UsuarioDTOOut>> listarUsuarios() {
         return ResponseEntity.ok(usuarioService.buscarTodos().stream().map(this::converterParaDTO).toList());
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('USER')")
-    @Operation(summary = "Atualiza os dados do usuário autenticado", description = "Permite que o usuário autenticado atualize seu próprio nome e email")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Usuário atualizado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-            @ApiResponse(responseCode = "403", description = "Acesso negado (tentativa de atualizar outro usuário)"),
-            @ApiResponse(responseCode = "404", description = "Usuário não encontrado"),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
-    })
-    public ResponseEntity<UsuarioDTOOut> atualizarUsuario(@PathVariable Long id,@Valid @RequestBody UsuarioDTOIn usuarioDTO) {
-        Usuario usuarioAtualizado = new Usuario();
-        usuarioAtualizado.setNome(usuarioDTO.getNome());
-        usuarioAtualizado.setEmail(usuarioDTO.getEmail());
-        Usuario usuario = usuarioService.atualizarUsuario(id, usuarioAtualizado);
-        return ResponseEntity.ok(converterParaDTO(usuario));
     }
 
     @DeleteMapping("/{id}")

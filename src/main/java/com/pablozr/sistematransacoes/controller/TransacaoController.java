@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/transacoes")
+@RequestMapping("/api/transacoes")
 public class TransacaoController {
     private final TransacaoService transacaoService;
     private final UsuarioService usuarioService;
