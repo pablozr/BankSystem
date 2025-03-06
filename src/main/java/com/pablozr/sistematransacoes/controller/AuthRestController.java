@@ -1,9 +1,6 @@
 package com.pablozr.sistematransacoes.controller;
 
-import com.pablozr.sistematransacoes.controller.dto.LoginDTOIn;
-import com.pablozr.sistematransacoes.controller.dto.LoginDTOOut;
-import com.pablozr.sistematransacoes.controller.dto.UsuarioDTOIn;
-import com.pablozr.sistematransacoes.controller.dto.UsuarioDTOOut;
+import com.pablozr.sistematransacoes.controller.dto.*;
 import com.pablozr.sistematransacoes.model.Usuario;
 import com.pablozr.sistematransacoes.security.CurrentUser;
 import com.pablozr.sistematransacoes.service.UsuarioService;
@@ -14,6 +11,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,10 +22,12 @@ import java.net.URI;
 @RequestMapping("/api/auth")
 public class AuthRestController {
     private final UsuarioService usuarioService;
+    private final JavaMailSender mailSender;
 
     @Autowired
-    public AuthRestController(UsuarioService usuarioService){
+    public AuthRestController(UsuarioService usuarioService, JavaMailSender mailSender){
         this.usuarioService = usuarioService;
+        this.mailSender = mailSender;
     }
 
     @PostMapping("/login")
@@ -94,7 +95,7 @@ public class AuthRestController {
     })
     public ResponseEntity<Void> logout(HttpServletRequest request) {
         String token = request.getHeader("Authorization").substring(7);
-        // TODO: Adicionar token a uma blacklist
+        usuarioService.adicionarTokenBlacklist(token); // Adiciona o token na blacklist, quando for passar no filtro jwt será barrado
         return ResponseEntity.noContent().build();
     }
 
@@ -106,7 +107,12 @@ public class AuthRestController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     })
     public ResponseEntity<Void> forgotPassword(@RequestBody @Valid ForgotPasswordDTO dto) {
-        // TODO: Implementar envio de email com token temporário
+        String token = usuarioService.gerarTokenResetSenha(dto.getEmail());
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(dto.getEmail());
+        message.setSubject("Redefinição de senha");
+        message.setText("Use este token para redefinir sua senha: " + token +"\n Válido por 30 minutos");
+        mailSender.send(message);
         return ResponseEntity.accepted().build();
     }
 
@@ -117,7 +123,7 @@ public class AuthRestController {
             @ApiResponse(responseCode = "400", description = "Token inválido ou expirado")
     })
     public ResponseEntity<Void> resetPassword(@RequestBody @Valid ResetPasswordDTO dto) {
-        // TODO: Validar token e atualizar senha
+        usuarioService.resetarSenha(dto.getToken(), dto.getNovaSenha());
         return ResponseEntity.ok().build();
     }
 }

@@ -1,5 +1,6 @@
 package com.pablozr.sistematransacoes.security;
 
+import com.pablozr.sistematransacoes.service.UsuarioService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,9 +19,11 @@ import java.util.Set;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UsuarioService usuarioService;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, UsuarioService usuarioService) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.usuarioService = usuarioService;
     }
 
     @Override
@@ -34,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = getTokenFromRequest(request);
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
+        if (token != null && jwtTokenProvider.validateToken(token) && !usuarioService.isTokenBlacklisted(token)) {
             String email = jwtTokenProvider.getEmailFromToken(token);
             Set<String> roles = jwtTokenProvider.getRolesFromToken(token);
 
