@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -68,9 +70,8 @@ public class TransacaoController {
             @ApiResponse(responseCode = "200", description = "Lista de transações retornada"),
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
-    public ResponseEntity<List<TransacaoDTOOut>> listarTransacoes(@CurrentUser Usuario usuario){
-        List<Transacao> transacaos = transacaoService.listarTransacoes(usuario);
-        return ResponseEntity.ok(transacaos.stream().map(this::converterParaDTO).collect(Collectors.toList()));
+    public ResponseEntity<Page<TransacaoDTOOut>> listarTransacoes(@CurrentUser Usuario usuario, Pageable pageable) {
+        return ResponseEntity.ok(transacaoService.listarTransacoes(usuario, pageable).map(this::converterParaDTO));
     }
 
     private TransacaoDTOOut converterParaDTO(Transacao transacao) {
@@ -80,6 +81,6 @@ public class TransacaoController {
                 transacao.getValor(),
                 transacao.getDataTransacao(),
                 transacao.getUsuario().getId(),
-                transacao.getDestinatario() != null ? transacao.getDestinatario().getId() : transacao.getUsuario().getId()
+                transacao.getDestinatario() != null ? transacao.getDestinatario().getId() : null
         );
 }   }

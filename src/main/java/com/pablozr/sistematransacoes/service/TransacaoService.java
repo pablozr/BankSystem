@@ -9,6 +9,8 @@ import com.pablozr.sistematransacoes.model.Usuario;
 import com.pablozr.sistematransacoes.repository.TransacaoRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,10 +31,11 @@ public class TransacaoService {
         return transacaoRepository.save(transacao);
     }
 
-    public List<Transacao> listarTransacoes(Usuario usuario){
-        return transacaoRepository.findByUsuario(usuario);
+    public Page<Transacao> listarTransacoes(Usuario usuario, Pageable pageable) {
+        return transacaoRepository.findByUsuario(usuario, pageable);
     }
 
+    @Transactional(rollbackOn = Exception.class)
     public Transacao deposito(Usuario usuario, BigDecimal valor){
         if (valor.compareTo(BigDecimal.ZERO) < 0){
             throw new ValorNegativoException("O valor do depósito deve ser positivo");
@@ -51,6 +54,10 @@ public class TransacaoService {
     public Transacao tranferencia(Usuario remetente, Usuario destinatario, BigDecimal valor){
         if (valor.compareTo(BigDecimal.ZERO) <= 0){
             throw new ValorNegativoException("O valor da transferência deve ser positivo");
+        }
+
+        if (remetente.getId().equals(destinatario.getId())) {
+            throw new IllegalArgumentException("Não é possível transferir para si mesmo.");
         }
 
         if (remetente.getSaldo().compareTo(valor) < 0){

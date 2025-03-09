@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -94,7 +95,11 @@ public class AuthRestController {
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
     public ResponseEntity<Void> logout(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").substring(7);
+        String token = request.getHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Token de autorização inválido");
+        }
+        token = token.substring(7);
         usuarioService.adicionarTokenBlacklist(token); // Adiciona o token na blacklist, quando for passar no filtro jwt será barrado
         return ResponseEntity.noContent().build();
     }
@@ -107,13 +112,19 @@ public class AuthRestController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
     })
     public ResponseEntity<Void> forgotPassword(@RequestBody @Valid ForgotPasswordDTO dto) {
-        String token = usuarioService.gerarTokenResetSenha(dto.getEmail());
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(dto.getEmail());
-        message.setSubject("Redefinição de senha");
-        message.setText("Use este token para redefinir sua senha: " + token +"\n Válido por 30 minutos");
-        mailSender.send(message);
-        return ResponseEntity.accepted().build();
+        try {
+            String token = usuarioService.gerarTokenResetSenha(dto.getEmail());
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(dto.getEmail());
+            message.setSubject("Redefinição de Senha - Banco Digital");
+            message.setText("Use este token para redefinir sua senha: " + token + "\nVálido por 30 minutos.");
+            mailSender.send(message);
+            return ResponseEntity.accepted().build();
+        } catch (MailAuthenticationException e) {
+            throw new RuntimeException("Falha na autenticação de email: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao enviar email: " + e.getMessage());
+        }
     }
 
     @PostMapping("/reset-password")

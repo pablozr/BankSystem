@@ -1,20 +1,19 @@
 package com.pablozr.sistematransacoes.controller;
 
-import com.pablozr.sistematransacoes.controller.dto.UsuarioDTOIn;
 import com.pablozr.sistematransacoes.controller.dto.UsuarioDTOOut;
 import com.pablozr.sistematransacoes.model.Usuario;
 import com.pablozr.sistematransacoes.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -51,8 +50,14 @@ public class UsuarioController {
             @ApiResponse(responseCode = "403", description = "Acesso negado (somente administradores)"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<List<UsuarioDTOOut>> listarUsuarios() {
-        return ResponseEntity.ok(usuarioService.buscarTodos().stream().map(this::converterParaDTO).toList());
+    public ResponseEntity<Page<UsuarioDTOOut>> listarUsuarios(@PageableDefault(sort = "id") Pageable pageable,
+                                                              @Parameter(description = "Filtro por nome (contém)") @RequestParam(required = false) String nome,
+                                                              @Parameter(description = "Filtro por email (contém)") @RequestParam(required = false) String email,
+                                                              @Parameter(description = "Filtro por saldo mínimo") @RequestParam(required = false) Double saldo) {
+        return ResponseEntity.ok(
+                usuarioService.buscarComFiltros(pageable, nome, email, saldo)
+                        .map(this::converterParaDTO)
+        );
     }
 
     @DeleteMapping("/{id}")
