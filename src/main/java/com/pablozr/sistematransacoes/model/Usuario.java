@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
@@ -35,4 +36,16 @@ public class Usuario {
     @CollectionTable(name = "usuario_roles", joinColumns = @JoinColumn(name = "usuario_id"))
     @Column(name = "role")
     private Set<String> roles;
+
+    private boolean ativo;
+
+    @Column(name = "data_criacao", updatable = false, nullable = false)
+    private LocalDateTime dataCriacao;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.dataCriacao == null) {
+            this.dataCriacao = LocalDateTime.now();
+        }
+    }
 }

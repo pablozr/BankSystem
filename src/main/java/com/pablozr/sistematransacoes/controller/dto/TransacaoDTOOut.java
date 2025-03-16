@@ -18,4 +18,6 @@ public class TransacaoDTOOut {
     private LocalDateTime dataTransacao;
     private Long usuarioId;
     private Long destinatarioId;
+    private String usuarioNome;
+    private String destinatarioNome;
 }

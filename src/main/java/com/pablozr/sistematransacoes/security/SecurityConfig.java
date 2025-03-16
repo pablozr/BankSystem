@@ -38,8 +38,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**").disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/auth/forgot-password",
+                                "/api/auth/reset-password", "/api/auth/confirm-email").permitAll()
                         .requestMatchers("/api/auth/profile").hasRole("USER")
                         .requestMatchers("/api/transacoes/**").hasRole("USER")
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/**").hasRole("ADMIN")

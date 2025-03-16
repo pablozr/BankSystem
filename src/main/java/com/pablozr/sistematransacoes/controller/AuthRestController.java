@@ -17,6 +17,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.net.URI;
 
 @RestController
@@ -54,10 +55,48 @@ public class AuthRestController {
         usuario.setNome(usuarioDTO.getNome());
         usuario.setEmail(usuarioDTO.getEmail());
         usuario.setSenha(usuarioDTO.getSenha());
+        usuario.setAtivo(false);
+        usuario.setSaldo(BigDecimal.ZERO);
         Usuario usuarioSalvo = usuarioService.salvarUsuario(usuario);
+
+        String token = usuarioService.gerarTokenConfirmacaoEmail(usuarioSalvo.getEmail());
+        enviarEmailConfirmacao(usuarioSalvo.getEmail(), token);
+
         return ResponseEntity.created(URI.create("/usuarios/" + usuarioSalvo.getId()))
-                .body(new UsuarioDTOOut(usuarioSalvo.getId(), usuarioSalvo.getNome(), usuarioSalvo.getEmail(), usuarioSalvo.getSaldo()));
+                .body(new UsuarioDTOOut(
+                        usuarioSalvo.getId(),
+                        usuarioSalvo.getNome(),
+                        usuarioSalvo.getEmail(),
+                        usuarioSalvo.getSaldo(),
+                        usuarioSalvo.getDataCriacao()
+                ));
     }
+
+    @PostMapping("/confirm-email")
+    @Operation(summary = "Confirma o email do usuário (API)", description = "Ativa a conta do usuário com o token de confirmação")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Email confirmado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Token inválido ou expirado")
+    })
+    public ResponseEntity<Void> confirmarEmail(@RequestBody ConfirmEmailDTO dto) {
+        usuarioService.confirmarEmail(dto.getToken());
+        return ResponseEntity.ok().build();
+    }
+
+    private void enviarEmailConfirmacao(String email, String token) {
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(email);
+            message.setSubject("Confirmação de Email - Banco Digital");
+            message.setText("Confirme seu email com este token: " + token + "\nVálido por 24 horas.");
+            mailSender.send(message);
+        } catch (MailAuthenticationException e) {
+            throw new RuntimeException("Falha na autenticação de email: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao enviar email de confirmação: " + e.getMessage());
+        }
+    }
+
 
     @PutMapping("/profile")
     @PreAuthorize("hasRole('USER')")

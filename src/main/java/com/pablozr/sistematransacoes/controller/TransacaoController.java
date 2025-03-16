@@ -3,6 +3,7 @@ package com.pablozr.sistematransacoes.controller;
 import com.pablozr.sistematransacoes.controller.dto.DepositoDTOIn;
 import com.pablozr.sistematransacoes.controller.dto.TransacaoDTOIn;
 import com.pablozr.sistematransacoes.controller.dto.TransacaoDTOOut;
+import com.pablozr.sistematransacoes.enums.TipoTransacao;
 import com.pablozr.sistematransacoes.exception.UsuarioNaoEncontradoException;
 import com.pablozr.sistematransacoes.model.Transacao;
 import com.pablozr.sistematransacoes.model.Usuario;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -70,8 +72,8 @@ public class TransacaoController {
             @ApiResponse(responseCode = "200", description = "Lista de transações retornada"),
             @ApiResponse(responseCode = "403", description = "Acesso negado")
     })
-    public ResponseEntity<Page<TransacaoDTOOut>> listarTransacoes(@CurrentUser Usuario usuario, Pageable pageable) {
-        return ResponseEntity.ok(transacaoService.listarTransacoes(usuario, pageable).map(this::converterParaDTO));
+    public ResponseEntity<Page<TransacaoDTOOut>> listarTransacoes(@CurrentUser Usuario usuario, Pageable pageable, TipoTransacao tipo, LocalDateTime dataInicio, LocalDateTime dataFim) {
+        return ResponseEntity.ok(transacaoService.listarTransacoes(usuario, pageable, tipo, dataInicio, dataFim).map(this::converterParaDTO));
     }
 
     private TransacaoDTOOut converterParaDTO(Transacao transacao) {
@@ -81,6 +83,9 @@ public class TransacaoController {
                 transacao.getValor(),
                 transacao.getDataTransacao(),
                 transacao.getUsuario().getId(),
-                transacao.getDestinatario() != null ? transacao.getDestinatario().getId() : null
+                transacao.getDestinatario() != null ? transacao.getDestinatario().getId() : null, // Long para destinatarioId
+                transacao.getUsuario().getNome(),
+                transacao.getDestinatario() != null ? transacao.getDestinatario().getNome() : null // String para destinatarioNome
         );
-}   }
+    }
+}

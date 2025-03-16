@@ -75,7 +75,7 @@ public class UsuarioController {
     }
 
     private UsuarioDTOOut converterParaDTO(Usuario usuario) {
-        return new UsuarioDTOOut(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getSaldo());
+        return new UsuarioDTOOut(usuario.getId(), usuario.getNome(), usuario.getEmail(), usuario.getSaldo(), usuario.getDataCriacao());
     }
 
 }

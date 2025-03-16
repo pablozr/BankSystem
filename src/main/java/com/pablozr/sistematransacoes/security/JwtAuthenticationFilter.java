@@ -1,5 +1,6 @@
 package com.pablozr.sistematransacoes.security;
 
+import com.pablozr.sistematransacoes.model.Usuario;
 import com.pablozr.sistematransacoes.service.UsuarioService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -39,6 +40,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null && jwtTokenProvider.validateToken(token) && !usuarioService.isTokenBlacklisted(token)) {
             String email = jwtTokenProvider.getEmailFromToken(token);
+            Usuario usuario = usuarioService.buscarPorEmail(email)
+                    .orElseThrow(() -> new IllegalStateException("Usuário não encontrado"));
+            if (!usuario.isAtivo()) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Confirme seu email para acessar o sistema");
+                return;
+            }
             Set<String> roles = jwtTokenProvider.getRolesFromToken(token);
 
             UserDetails userDetails = User.withUsername(email)

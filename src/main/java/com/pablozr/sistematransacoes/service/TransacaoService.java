@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -31,8 +32,18 @@ public class TransacaoService {
         return transacaoRepository.save(transacao);
     }
 
-    public Page<Transacao> listarTransacoes(Usuario usuario, Pageable pageable) {
-        return transacaoRepository.findByUsuario(usuario, pageable);
+    public Page<Transacao> listarTransacoes(Usuario usuario, Pageable pageable, TipoTransacao tipo, LocalDateTime dataInicio, LocalDateTime dataFim) {
+        Specification<Transacao> spec = Specification.where((root, query, cb) -> cb.equal(root.get("usuario"), usuario));
+        if (tipo != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("tipo"), tipo));
+        }
+        if (dataInicio != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("dataTransacao"), dataInicio));
+        }
+        if (dataFim != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("dataTransacao"), dataFim));
+        }
+        return transacaoRepository.findAll(spec, pageable);
     }
 
     @Transactional(rollbackOn = Exception.class)
